@@ -22,10 +22,10 @@ variable {N : Type*} [AddCommGroup N] [Module R N]
 variable {p : M →ₗ[R] N →ₗ[R] R}
 
 variable (p) in
-/-- A submodule is FGDual if it is the dual of a finite set. Equivalently, it can be determined
-  using finitely many equalities. This is the counterpart to `FG` (finitely generated) which is
+/-- A submodule is FGDual if it is the dual of a finite set. Equivalently, it is determined
+  by finitely many equalities. This is the counterpart to `FG` (finitely generated) which is
   determined by finitely many generators. Over a field FGDual is equiavlent to being simultaneously
-  co-finitely generated (CoFG) and dual-closed (i.e. being its own double dual). -/
+  co-finitely generated (CoFG) and dual-closed (i.e. identical to its own double dual). -/
 def FGDual (S : Submodule R N) : Prop := ∃ s : Finset M, dual p s = S
 
 /-- A FGDual submodule is the dual of an FG submodule. If the pairing `p` is left-separating, then
@@ -73,7 +73,6 @@ lemma FGDual.dual_dual_flip {S : Submodule R N} (hS : S.FGDual p) :
 lemma FGDual.dual_flip_dual {S : Submodule R M} (hS : S.FGDual p.flip) :
     dual p.flip (dual p S) = S := hS.dual_dual_flip
 
-@[simp]
 lemma FGDual.ker_le {S : Submodule R N} (hS : S.FGDual p) : ker p.flip ≤ S := by
   rw [← dual_dual_flip hS]
   exact ker_le_dual _
