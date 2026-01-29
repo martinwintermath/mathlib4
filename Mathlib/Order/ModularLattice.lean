@@ -406,7 +406,7 @@ instance complementedLattice_Ici : ComplementedLattice (Set.Ici a) where
     exact ⟨⟨y, inf_le_right⟩, rfl, hcodisjoint⟩
 
 /-- A disjoint element can be enlarged to a complementary element. -/
-@[to_dual IsModularLattice.Codisjoint.exists_isCompl
+@[to_dual Codisjoint.exists_isCompl
   /-- A codisjoint element can be shrunk to a complementary element. -/]
 theorem Disjoint.exists_isCompl {a b : α} (hab : Disjoint a b) :
     ∃ a' : α, a ≤ a' ∧ IsCompl a' b := by
