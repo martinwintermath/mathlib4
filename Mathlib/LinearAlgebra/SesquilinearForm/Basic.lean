@@ -358,9 +358,15 @@ namespace Submodule
 
 /-! ### The orthogonal complement -/
 
-variable [CommRing R] [CommRing R₁] [AddCommGroup M₁] [Module R₁ M₁] [AddCommGroup M] [Module R M]
-  {I₁ : R₁ →+* R} {I₂ : R₁ →+* R} {B : M₁ →ₛₗ[I₁] M₁ →ₛₗ[I₂] M}
+-- variable [CommRing R] [CommRing R₁] [AddCommGroup M₁] [Module R₁ M₁] [AddCommGroup M] [Module R M]
+--   {I₁ : R₁ →+* R} {I₂ : R₁ →+* R} {B : M₁ →ₛₗ[I₁] M₁ →ₛₗ[I₂] M}
 
+variable [CommSemiring R] [CommSemiring R₁] [AddCommMonoid M₁] [Module R₁ M₁] [CommSemiring R₂]
+  [AddCommMonoid M₂] [Module R₂ M₂] [AddCommMonoid M] [Module R M]
+  {I₁ : R₁ →+* R} {I₂ : R₂ →+* R} {I₁' : R₁ →+* R}
+variable {B : M₁ →ₛₗ[I₁] M₂ →ₛₗ[I₂] M}
+
+variable (B) in
 /-- The orthogonal complement of a submodule `N` with respect to some bilinear map is the set of
 elements `x` which are orthogonal to all elements of `N`; i.e., for all `y` in `N`, `B x y = 0`.
 
@@ -368,8 +374,8 @@ Note that for general (neither symmetric nor antisymmetric) bilinear maps this d
 chirality; in addition to this "left" orthogonal complement one could define a "right" orthogonal
 complement for which, for all `y` in `N`, `B y x = 0`.  This variant definition is not currently
 provided in mathlib. -/
-def orthogonalBilin (N : Submodule R₁ M₁) (B : M₁ →ₛₗ[I₁] M₁ →ₛₗ[I₂] M) : Submodule R₁ M₁ where
-  carrier := { m | ∀ n ∈ N, B.IsOrtho n m }
+def orthogonalBilin (s : Set M₁) : Submodule R₂ M₂ where
+  carrier := { m | ∀ n ∈ s, B.IsOrtho n m }
   zero_mem' x _ := B.isOrtho_zero_right x
   add_mem' hx hy n hn := by
     rw [LinearMap.IsOrtho, map_add, show B n _ = 0 from hx n hn, show B n _ = 0 from hy n hn,
@@ -377,17 +383,36 @@ def orthogonalBilin (N : Submodule R₁ M₁) (B : M₁ →ₛₗ[I₁] M₁ →
   smul_mem' c x hx n hn := by
     rw [LinearMap.IsOrtho, map_smulₛₗ, show B n x = 0 from hx n hn, smul_zero]
 
-variable {N L : Submodule R₁ M₁}
+variable {s t : Set M₁}
 
 @[simp]
-theorem mem_orthogonalBilin_iff {m : M₁} : m ∈ N.orthogonalBilin B ↔ ∀ n ∈ N, B.IsOrtho n m :=
+theorem mem_orthogonalBilin_iff {m : M₂} : m ∈ orthogonalBilin B s ↔ ∀ n ∈ s, B.IsOrtho n m :=
   Iff.rfl
 
-theorem orthogonalBilin_le (h : N ≤ L) : L.orthogonalBilin B ≤ N.orthogonalBilin B :=
+theorem orthogonalBilin_le (h : s ⊆ t) : orthogonalBilin B t ≤ orthogonalBilin B s :=
   fun _ hn l hl ↦ hn l (h hl)
 
-theorem le_orthogonalBilin_orthogonalBilin (b : B.IsRefl) :
-    N ≤ (N.orthogonalBilin B).orthogonalBilin B := fun n hn _m hm ↦ b _ _ (hm n hn)
+alias orthogonalBilin_anti := orthogonalBilin_le
+
+-- TODO: orthogonalBilin_antitone
+
+theorem orthogonalBilin_span : orthogonalBilin B (Submodule.span R₁ s) = orthogonalBilin B s := by
+  refine le_antisymm (orthogonalBilin_le Submodule.subset_span) (fun x hx y hy => ?_)
+  induction hy using Submodule.span_induction with
+  | mem _y h => exact hx _ h
+  | zero => simp [LinearMap.isOrtho_def]
+  | add y z _hy _hz hy hz =>
+    simp only [LinearMap.isOrtho_def] at ⊢ hz hy
+    simp [hz, hy]
+  | smul t y _hy hy =>
+    simp only [LinearMap.isOrtho_def, LinearMap.map_smulₛₗ, LinearMap.smul_apply] at ⊢ hy
+    simp only [hy, smul_zero]
+
+theorem subset_orthogonalBilin_orthogonalBilin :
+    s ⊆ orthogonalBilin B.flip (orthogonalBilin B s) := fun x hx _ hy => hy x hx
+
+@[deprecated (since := "2026-02-02")]
+alias le_orthogonalBilin_orthogonalBilin := subset_orthogonalBilin_orthogonalBilin
 
 end Submodule
 
@@ -400,7 +425,7 @@ variable [Field K] [AddCommGroup V] [Module K V] [Field K₁] [AddCommGroup V₁
 
 -- ↓ This lemma only applies in fields as we require `a * b = 0 → a = 0 ∨ b = 0`
 theorem span_singleton_inf_orthogonal_eq_bot (B : V₁ →ₛₗ[J₁] V₁ →ₛₗ[J₁'] V₂) (x : V₁)
-    (hx : ¬B.IsOrtho x x) : (K₁ ∙ x) ⊓ Submodule.orthogonalBilin (K₁ ∙ x) B = ⊥ := by
+    (hx : ¬B.IsOrtho x x) : (K₁ ∙ x) ⊓ Submodule.orthogonalBilin B (K₁ ∙ x) = ⊥ := by
   rw [← Finset.coe_singleton]
   refine eq_bot_iff.2 fun y h ↦ ?_
   obtain ⟨μ, -, rfl⟩ := Submodule.mem_span_finset.1 h.1
@@ -414,18 +439,13 @@ theorem span_singleton_inf_orthogonal_eq_bot (B : V₁ →ₛₗ[J₁] V₁ →�
 
 -- ↓ This lemma only applies in fields since we use the `mul_eq_zero`
 theorem orthogonal_span_singleton_eq_to_lin_ker {B : V →ₗ[K] V →ₛₗ[J] V₂} (x : V) :
-    Submodule.orthogonalBilin (K ∙ x) B = LinearMap.ker (B x) := by
+    Submodule.orthogonalBilin B {x} = LinearMap.ker (B x) := by
   ext y
-  simp_rw [Submodule.mem_orthogonalBilin_iff, LinearMap.mem_ker, Submodule.mem_span_singleton]
-  constructor
-  · exact fun h ↦ h x ⟨1, one_smul _ _⟩
-  · rintro h _ ⟨z, rfl⟩
-    rw [isOrtho_def, map_smulₛₗ₂, smul_eq_zero]
-    exact Or.intro_right _ h
+  simp [isOrtho_def]
 
 -- todo: Generalize this to sesquilinear maps
 theorem span_singleton_sup_orthogonal_eq_top {B : V →ₗ[K] V →ₗ[K] K} {x : V} (hx : ¬B.IsOrtho x x) :
-    (K ∙ x) ⊔ Submodule.orthogonalBilin (N := K ∙ x) (B := B) = ⊤ := by
+    (K ∙ x) ⊔ Submodule.orthogonalBilin B {x} = ⊤ := by
   rw [orthogonal_span_singleton_eq_to_lin_ker]
   exact (B x).span_singleton_sup_ker_eq_top hx
 
@@ -433,14 +453,16 @@ theorem span_singleton_sup_orthogonal_eq_top {B : V →ₗ[K] V →ₗ[K] K} {x 
 /-- Given a bilinear form `B` and some `x` such that `B x x ≠ 0`, the span of the singleton of `x`
   is complement to its orthogonal complement. -/
 theorem isCompl_span_singleton_orthogonal {B : V →ₗ[K] V →ₗ[K] K} {x : V} (hx : ¬B.IsOrtho x x) :
-    IsCompl (K ∙ x) (Submodule.orthogonalBilin (N := K ∙ x) (B := B)) :=
-  { disjoint := disjoint_iff.2 <| span_singleton_inf_orthogonal_eq_bot B x hx
+    IsCompl (K ∙ x) (Submodule.orthogonalBilin B {x}) :=
+  { disjoint := by
+      rw [← Submodule.orthogonalBilin_span]
+      exact disjoint_iff.2 <| span_singleton_inf_orthogonal_eq_bot B x hx
     codisjoint := codisjoint_iff.2 <| span_singleton_sup_orthogonal_eq_top hx }
 
 end Orthogonal
 
-/-! ### Adjoint pairs -/
 
+/-! ### Adjoint pairs -/
 
 section AdjointPair
 
@@ -802,7 +824,7 @@ lemma IsSymm.nondegenerate_restrict_of_isCompl_ker {B : M →ₗ[R] M →ₗ[R] 
 nondegenerate if `W` has trivial intersection with its orthogonal complement,
 that is `Disjoint W (W.orthogonalBilin B)`. -/
 theorem nondegenerate_restrict_of_disjoint_orthogonal {B : M →ₗ[R] M →ₗ[R] M₁} (hB : B.IsRefl)
-    {W : Submodule R M} (hW : Disjoint W (W.orthogonalBilin B)) :
+    {W : Submodule R M} (hW : Disjoint W (Submodule.orthogonalBilin B W)) :
     (B.domRestrict₁₂ W W).Nondegenerate := by
   rw [(hB.domRestrict W).nondegenerate_iff_separatingLeft]
   rintro ⟨x, hx⟩ b₁
