@@ -72,7 +72,7 @@ theorem range_fg_iff_ker_cofg {f : M →ₗ[R] N} : (range f).FG ↔ (ker f).CoF
 
 /-- The kernel of a linear map into a noetherian module is CoFG. -/
 protected theorem CoFG.ker [IsNoetherian R N] (f : M →ₗ[R] N) : (ker f).CoFG :=
-    range_fg_iff_ker_cofg.mp <| IsNoetherian.noetherian _
+  range_fg_iff_ker_cofg.mp <| IsNoetherian.noetherian _
 
 end LinearMap
 
