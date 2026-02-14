@@ -292,10 +292,10 @@ section AddCommGroup
 variable [AddCommGroup G] [SMul R G] {C C₁ C₂ : ConvexCone R G}
 
 /-- A convex cone is flat if it contains some nonzero vector `x` and its opposite `-x`. -/
-def Flat (C : ConvexCone R G) : Prop := ∃ x ∈ C, x ≠ (0 : G) ∧ -x ∈ C
+def Flat (C : ConvexCone R G) : Prop := ∃ x ∈ C, -x ∈ C ∧ x ≠ 0
 
 /-- A convex cone is salient if it doesn't include `x` and `-x` for any nonzero `x`. -/
-def Salient (C : ConvexCone R G) : Prop := ∀ x ∈ C, x ≠ (0 : G) → -x ∉ C
+def Salient (C : ConvexCone R G) : Prop := ∀ x ∈ C, -x ∈ C → x = 0
 
 theorem salient_iff_not_flat : C.Salient ↔ ¬ C.Flat := by simp [Salient, Flat]
 
