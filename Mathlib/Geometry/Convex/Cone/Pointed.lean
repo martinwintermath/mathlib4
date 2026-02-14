@@ -35,7 +35,51 @@ namespace PointedCone
 
 open Function
 
-section Definitions
+section Submodule
+
+variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [AddCommMonoid E] [Module R E]
+  {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
+
+/-- A submodule is a pointed cone. -/
+@[coe] abbrev ofSubmodule (S : Submodule R E) : PointedCone R E := S.restrictScalars _
+
+instance : Coe (Submodule R E) (PointedCone R E) := ⟨ofSubmodule⟩
+
+@[simp] lemma ofSubmodule_coe (S : Submodule R E) : (ofSubmodule S : Set E) = S := by rfl
+
+@[simp] lemma mem_ofSubmodule_iff {S : Submodule R E} {x : E} :
+    x ∈ (S : PointedCone R E) ↔ x ∈ S := by rfl
+
+@[simp] lemma ofSubmodule_inj {S T : Submodule R E} : ofSubmodule S = ofSubmodule T ↔ S = T
+  := Submodule.restrictScalars_inj ..
+
+def ofSubmodule_embedding : Submodule R E ↪o PointedCone R E :=
+  Submodule.restrictScalarsEmbedding ..
+
+def ofSubmodule_latticeHom : CompleteLatticeHom (Submodule R E) (PointedCone R E) :=
+  Submodule.restrictScalarsLatticeHom ..
+
+lemma ofSubmodule_inf (S T : Submodule R E) : S ⊓ T = (S ⊓ T : PointedCone R E)
+    := Submodule.restrictScalars_inf _ _ _
+
+lemma ofSubmodule_sup (S T : Submodule R E) : S ⊔ T = (S ⊔ T : PointedCone R E)
+    := Submodule.restrictScalars_sup _ _ _
+
+lemma ofSubmodule_sInf (s : Set (Submodule R E)) : sInf s = sInf (ofSubmodule '' s) :=
+  ofSubmodule_latticeHom.map_sInf' s
+
+lemma ofSubmodule_iInf (s : Set (Submodule R E)) : ⨅ S ∈ s, S = ⨅ S ∈ s, (S : PointedCone R E) := by
+  rw [← sInf_eq_iInf, ofSubmodule_sInf, sInf_eq_iInf, iInf_image]
+
+lemma ofSubmodule_sSup (s : Set (Submodule R E)) : sSup s = sSup (ofSubmodule '' s) :=
+  ofSubmodule_latticeHom.map_sSup' s
+
+lemma ofSubmodule_iSup (s : Set (Submodule R E)) : ⨆ S ∈ s, S = ⨆ S ∈ s, (S : PointedCone R E) := by
+  rw [← sSup_eq_iSup, ofSubmodule_sSup, sSup_eq_iSup, iSup_image]
+
+end Submodule
+
+section ConvexCone
 
 variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [AddCommMonoid E] [Module R E]
   {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
@@ -99,6 +143,13 @@ lemma _root_.ConvexCone.toPointedCone_top : (⊤ : ConvexCone R E).toPointedCone
 
 instance canLift : CanLift (ConvexCone R E) (PointedCone R E) (↑) ConvexCone.Pointed where
   prf C hC := ⟨C.toPointedCone hC, rfl⟩
+
+end ConvexCone
+
+section Definitions
+
+variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [AddCommMonoid E] [Module R E]
+  {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
 
 /-- Construct a pointed cone from closure under two-element conical combinations.
 I.e., a nonempty set closed under two-element conical combinations is a pointed cone. -/
