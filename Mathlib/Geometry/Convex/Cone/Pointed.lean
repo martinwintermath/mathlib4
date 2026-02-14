@@ -38,7 +38,7 @@ open Function
 section Submodule
 
 variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [AddCommMonoid E] [Module R E]
-  {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
+variable {C : PointedCone R E}
 
 /-- A submodule is a pointed cone. -/
 @[coe] abbrev ofSubmodule (S : Submodule R E) : PointedCone R E := S.restrictScalars _
@@ -83,7 +83,7 @@ end Submodule
 section ConvexCone
 
 variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [AddCommMonoid E] [Module R E]
-  {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
+variable {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
 
 /-- Every pointed cone is a convex cone. -/
 @[coe]
@@ -150,7 +150,7 @@ end ConvexCone
 section Definitions
 
 variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [AddCommMonoid E] [Module R E]
-  {C C₁ C₂ : PointedCone R E} {x : E} {r : R}
+variable {C : PointedCone R E} {x : E}
 
 /-- Construct a pointed cone from closure under two-element conical combinations.
 I.e., a nonempty set closed under two-element conical combinations is a pointed cone. -/
