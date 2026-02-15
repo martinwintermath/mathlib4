@@ -66,7 +66,6 @@ lemma dual_univ (hp : Injective p.flip) : dual p univ = 0 := by
 
 @[gcongr] lemma dual_anti (h : t ⊆ s) : dual p s ≤ dual p t := fun _y hy _x hx ↦ hy (h hx)
 
-@[deprecated dual_anti (since := "2026-02-14")]
 alias dual_le_dual := dual_anti
 
 lemma dual_antitone : Antitone (dual p) := fun _ _ h => dual_anti h
@@ -93,7 +92,7 @@ lemma dual_eq_iInter_dual_singleton (s : Set M) :
 /-- Any set is a subset of its double dual cone. -/
 lemma subset_dual_dual : s ⊆ dual p.flip (dual p s) := fun _x hx _y hy ↦ hy hx
 
-lemma dual_flip_dual_mono {s t : Set M} (hSC : s ⊆ t) :
+lemma dual_dual_mono {s t : Set M} (hSC : s ⊆ t) :
     dual p.flip (dual p s) ≤ dual p.flip (dual p t) := dual_antitone <| dual_antitone hSC
 
 variable (s) in
@@ -124,6 +123,6 @@ lemma dual_eval (s : Set M) : dual p s = comap p.flip (dual (Module.Dual.eval R 
 
 lemma neg_dual {s : Set M} : -(dual p s) = dual p (-s) := by ext x; simp
 
-@[simp] lemma dual_neg_neg (s : Set M) : -dual p (-s) = dual p s := by ext x; simp
+@[simp] lemma neg_dual_neg (s : Set M) : -dual p (-s) = dual p s := by ext x; simp
 
 end PointedCone
