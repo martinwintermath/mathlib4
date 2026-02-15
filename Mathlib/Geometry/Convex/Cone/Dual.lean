@@ -26,9 +26,6 @@ always contains `0`, i.e. is a pointed cone.
 Furthermore, the strict version `{y | ∀ x ∈ s, 0 < p x y}` is a candidate to the name
 `ConvexCone.dual`.
 
-## TODO
-
-Deduce from `dual_flip_dual_dual_flip` that polyhedral cones are invariant under taking double duals
 -/
 
 @[expose] public section
