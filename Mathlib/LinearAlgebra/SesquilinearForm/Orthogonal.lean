@@ -218,13 +218,13 @@ end CommSemiring
 
 section Field
 
-variable {K M₁ M₂ : Type*}
+variable {K M M₁ M₂ : Type*}
 variable [Field K]
 variable [AddCommGroup M₁] [Module K M₁]
 variable [AddCommGroup M₂] [Module K M₂]
 
 variable {B : M₁ →ₗ[K] M₂ →ₗ[K] K}
-variable {S : Submodule K M₁}
+variable {S T : Submodule K M₁}
 
 theorem orthogonalBilin_flip_orthogonalBilin_of_inj
     (hB : Function.Injective B) (hS : S.FG) :
@@ -243,8 +243,18 @@ theorem orthogonalBilin_flip_orthogonalBilin (hS : S.FG) :
   rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
   rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
   apply comap_map_eq_self
-  rw [LinearMap.separatingLeft_iff_ker_eq_bot.mp Fact.out]
+  rw [separatingLeft_iff_ker_eq_bot.mp Fact.out]
   exact bot_le
+
+variable [fact : Fact B.SeparatingLeft] in
+theorem orthogonalBilin_inf_eq_sup (hS : S.FG) (hT : T.FG) :
+    orthogonalBilin B (S ⊓ T) = orthogonalBilin B S ⊔ orthogonalBilin B T := by
+  rw [separatingLeft_iff_ker_eq_bot, ker_eq_bot] at fact
+  have := Finite.iff_fg.mpr (hS.map B)
+  have := Finite.iff_fg.mpr (hT.map B)
+  rw [← dualCoannihilator_map_eq_orthogonalBilin B]
+  rw [map_inf _ fact.out, Subspace.dualCoannihilator_inf_eq]
+  repeat rw [dualCoannihilator_map_eq_orthogonalBilin B]
 
 end Field
 
