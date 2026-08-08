@@ -6,8 +6,9 @@ Authors: Moritz Doll, Christopher Hoskin, Martin Winter
 module
 
 public import Mathlib.LinearAlgebra.SesquilinearForm.Basic
+public import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 
-import Mathlib.Algebra.Module.Torsion.Field
+import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
 # Orthogonal complement
@@ -26,6 +27,8 @@ open Module LinearMap
 variable {R R₁ R₂ M M₁ M₂ : Type*}
 
 namespace Submodule
+
+section CommSemiring
 
 /-! ### The orthogonal complement -/
 
@@ -210,6 +213,40 @@ theorem orthogonalBilin_id_map_dualMap (q : M₁ →ₗ[R₁] M₁') (S : Submod
   ext x; simp
 
 end Map
+
+end CommSemiring
+
+section Field
+
+variable {K M₁ M₂ : Type*}
+variable [Field K]
+variable [AddCommGroup M₁] [Module K M₁]
+variable [AddCommGroup M₂] [Module K M₂]
+
+variable {B : M₁ →ₗ[K] M₂ →ₗ[K] K}
+variable {S : Submodule K M₁}
+
+theorem orthogonalBilin_flip_orthogonalBilin_of_inj
+    (hB : Function.Injective B) (hS : S.FG) :
+    orthogonalBilin B.flip (orthogonalBilin B S) = S := by
+  have := Module.Finite.iff_fg.mpr hS
+  rw [← dualCoannihilator_map_eq_orthogonalBilin B S]
+  rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
+  rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
+  exact comap_map_eq_self <| (ker_eq_bot.mpr hB).le.trans bot_le
+
+variable [Fact B.SeparatingLeft] in
+theorem orthogonalBilin_flip_orthogonalBilin (hS : S.FG) :
+    orthogonalBilin B.flip (orthogonalBilin B S) = S := by
+  have := Module.Finite.iff_fg.mpr hS
+  rw [← dualCoannihilator_map_eq_orthogonalBilin B S]
+  rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
+  rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
+  apply comap_map_eq_self
+  rw [LinearMap.separatingLeft_iff_ker_eq_bot.mp Fact.out]
+  exact bot_le
+
+end Field
 
 end Submodule
 
