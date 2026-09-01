@@ -68,20 +68,35 @@ theorem mem_orthogonalBilin_iff_le_ker_flip {y : M₂} :
     y ∈ orthogonalBilin B (span R₁ s) ↔ ∀ ⦃x⦄, x ∈ s → B x y = 0 := by
   simpa using! span_le (p := LinearMap.ker (B.flip y))
 
-@[simp] theorem orthogonalBilin_bot : orthogonalBilin B ⊥ = ⊤ := by ext; simp
+variable (B) in
+lemma orthogonalBilin_gc :
+    @GaloisConnection (Submodule R₁ M₁) (Submodule R₂ M₂)ᵒᵈ _ _
+      (orthogonalBilin B) (orthogonalBilin B.flip) :=
+  fun _ _ ↦ ⟨fun h _ hx _ hy ↦ h hy _ hx, fun h _ hy _ hx ↦ h hx _ hy⟩
 
-@[simp] theorem orthogonalBilin_ker : orthogonalBilin B (ker B) = ⊤ := by ext; simp +contextual
+theorem le_orthogonalBilin_flip_iff_le_orthogonalBilin {T : Submodule R₂ M₂} :
+    S ≤ orthogonalBilin B.flip T ↔ T ≤ orthogonalBilin B S :=
+  ((orthogonalBilin_gc B) S T).symm
+
+alias ⟨le_orthogonalBilin_of_le_orthogonBilin_flip, le_orthogonalBilin_flip_of_le_orthogonBilin⟩ :=
+  le_orthogonalBilin_flip_iff_le_orthogonalBilin
+
+@[simp] theorem orthogonalBilin_bot : orthogonalBilin B ⊥ = ⊤ :=
+  (orthogonalBilin_gc B).l_bot
+
+@[simp] theorem orthogonalBilin_ker : orthogonalBilin B (ker B) = ⊤ := by
+  ext; simp +contextual
 
 theorem orthogonalBilin_top_eq_ker : orthogonalBilin B ⊤ = ker B.flip := by
   ext x; simp [LinearMap.ext_iff]
 
 @[gcongr] theorem orthogonalBilin_le (h : S ≤ T) :
-    orthogonalBilin B T ≤ orthogonalBilin B S := fun _ hy _ hx ↦ hy _ (h hx)
+    orthogonalBilin B T ≤ orthogonalBilin B S := (orthogonalBilin_gc B).monotone_l h
 
 alias orthogonalBilin_anti := orthogonalBilin_le
 
 theorem orthogonalBilin_antitone : Antitone (orthogonalBilin B) :=
-  fun _ _ h => orthogonalBilin_le h
+  (orthogonalBilin_gc B).monotone_l
 
 theorem ker_flip_le_orthogonalBilin (S) : ker B.flip ≤ orthogonalBilin B S := by
   simp [← orthogonalBilin_top_eq_ker, orthogonalBilin_anti]
@@ -96,19 +111,16 @@ theorem orthogonalBilin_span_singleton (x : M₁) : orthogonalBilin B (R₁ ∙ 
 alias _root_.LinearMap.orthogonal_span_singleton_eq_to_lin_ker := orthogonalBilin_span_singleton
 
 theorem orthogonalBilin_sSup (s : Set (Submodule R₁ M₁)) :
-    orthogonalBilin B (sSup s) = sInf (orthogonalBilin B '' s) := by
-  ext y
-  simp only [mem_orthogonalBilin, mem_sInf, Set.mem_image, forall_exists_index, and_imp,
-    forall_apply_eq_imp_iff₂]
-  exact ⟨fun h _ ha _ hn ↦ h _ (le_sSup ha hn), fun h _ hn ↦ mem_sSup.mp hn (B.flip y).ker h⟩
+    orthogonalBilin B (sSup s) = ⨅ S ∈ s, orthogonalBilin B S :=
+  (orthogonalBilin_gc B).l_sSup
 
 theorem orthogonalBilin_iSup {ι : Sort*} (f : ι → Submodule R₁ M₁) :
-    orthogonalBilin B (⨆ i, f i) = ⨅ i, orthogonalBilin B (f i) := by
-  simpa only [sSup_range, sInf_image, iInf_range] using orthogonalBilin_sSup (Set.range f)
+    orthogonalBilin B (⨆ i, f i) = ⨅ i, orthogonalBilin B (f i) :=
+  (orthogonalBilin_gc B).l_iSup
 
 theorem orthogonalBilin_sup (S T) :
-    orthogonalBilin B (S ⊔ T) = orthogonalBilin B S ⊓ orthogonalBilin B T := by
-  simpa [Set.image_pair] using orthogonalBilin_sSup {S, T}
+    orthogonalBilin B (S ⊔ T) = orthogonalBilin B S ⊓ orthogonalBilin B T :=
+  (orthogonalBilin_gc B).l_sup
 
 variable (B) in
 @[simp] theorem orthogonalBilin_sup_ker (S) :
@@ -116,17 +128,84 @@ variable (B) in
   simp [orthogonalBilin_sup]
 
 /-- Every submodule is contained in the orthogonal complement of its orthogonal complement. -/
-theorem le_orthogonalBilin_orthogonalBilin :
-    S ≤ orthogonalBilin B.flip (orthogonalBilin B S) := fun _x hx _y hy ↦ hy _ hx
+theorem le_orthogonalBilin_flip_orthogonalBilin :
+    S ≤ orthogonalBilin B.flip (orthogonalBilin B S) := (orthogonalBilin_gc B).le_u_l S
 
-section IsRefl
+theorem le_orthogonalBilin_orthogonalBilin {I₂ : R₁ →+* R} {B : M₁ →ₛₗ[I₁] M₁ →ₛₗ[I₂] M}
+    (b : B.IsRefl) : S ≤ (S.orthogonalBilin B).orthogonalBilin B :=
+  fun n hn _m hm ↦ b _ _ (hm n hn)
 
-variable {I₂ : R₁ →+* R} {B : M₁ →ₛₗ[I₁] M₁ →ₛₗ[I₂] M}
+@[simp] theorem orthogonalBilin_orthogonalBilin_flip_orthogonalBilin (S) :
+    orthogonalBilin B (orthogonalBilin B.flip (orthogonalBilin B S)) = orthogonalBilin B S :=
+  (orthogonalBilin_gc B).l_u_l_eq_l S
 
-theorem _root_.LinearMap.IsRefl.le_orthogonalBilin_orthogonalBilin (b : B.IsRefl) :
-    S ≤ (S.orthogonalBilin B).orthogonalBilin B := fun n hn _m hm ↦ b _ _ (hm n hn)
+@[simp] theorem orthogonalBilin_flip_orthogonalBilin_orthogonalBilin_flip (S : Submodule R₂ M₂) :
+    orthogonalBilin B.flip (orthogonalBilin B (orthogonalBilin B.flip S)) =
+      orthogonalBilin B.flip S :=
+  (orthogonalBilin_gc B).u_l_u_eq_u S
 
-end IsRefl
+theorem orthogonalBilin_sup_orthogonalBilin_le_orthogonalBilin_inf (S T) :
+    orthogonalBilin B S ⊔ orthogonalBilin B T ≤ orthogonalBilin B (S ⊓ T) :=
+  sup_le (orthogonalBilin_le inf_le_left) (orthogonalBilin_le inf_le_right)
+
+/-- The orthogonal submodule w.r.t. the standard bilinear pairing is the dual annihilator. -/
+@[simp] theorem orthogonalBilin_eval_eq_dualAnnihilator (S) :
+    orthogonalBilin (Dual.eval R₁ M₁) S = S.dualAnnihilator := by ext x; simp
+
+/-- The orthogonal submodule w.r.t. the identity pairing is the dual coannihilator. -/
+@[simp] theorem orthogonalBilin_id_eq_dualCoannihilator (S : Submodule R₁ (Dual R₁ M₁)) :
+    orthogonalBilin .id S = S.dualCoannihilator := by ext; simp
+
+variable {R₃ : Type*} [CommSemiring R₃]
+variable {M₃ : Type*} [AddCommMonoid M₃] [Module R₃ M₃]
+variable {J₃ : R₃ →+* R₁} {J : R₃ →+* R} [RingHomCompTriple J₃ I₁ J]
+
+variable [RingHomSurjective J₃] in
+lemma orthogonalBilin_map (S : Submodule R₃ M₃) (q : M₃ →ₛₗ[J₃] M₁) :
+    orthogonalBilin B (S.map q) = orthogonalBilin (B.comp q) S := by ext; simp
+
+variable [RingHomSurjective I₁] in
+/-- Orthogonality w.r.t. a general bilinear map can be expressed as orthogonality w.r.t
+the identity pairing. -/
+@[simp] lemma orthogonalBilin_id_map (S) :
+    orthogonalBilin .id (map B S) = orthogonalBilin B S := orthogonalBilin_map _ _
+
+section
+
+variable {I₂ : R₂ →+* R₁} {B : M₁ →ₗ[R₁] M₂ →ₛₗ[I₂] R₁}
+
+/-- Orthogonality w.r.t. a general bilinear map can be expressed as orthogonality w.r.t
+the evaluation pairing. -/
+lemma comap_orthogonalBilin_eval (S) :
+    comap B.flip (orthogonalBilin (Dual.eval R₁ M₁) S) = orthogonalBilin B S := by
+  ext; simp
+
+variable (B) in
+@[simp] theorem comap_dualAnnihilator_eq_orthogonalBilin (S) :
+    comap B.flip S.dualAnnihilator = orthogonalBilin B S := by
+  rw [← orthogonalBilin_eval_eq_dualAnnihilator, comap_orthogonalBilin_eval]
+
+end
+
+variable (B) in
+theorem dualCoannihilator_map_eq_orthogonalBilin {I₁ : R₁ →+* R₂} {B : M₁ →ₛₗ[I₁] M₂ →ₗ[R₂] R₂}
+    [RingHomSurjective I₁] (S) : (map B S).dualCoannihilator = orthogonalBilin B S := by
+  ext x; simp
+
+section Map
+
+variable {M₁' : Type*} [AddCommMonoid M₁'] [Module R₁ M₁']
+
+theorem orthogonalBilin_eval_map (q : M₁ →ₗ[R₁] M₁') (S : Submodule R₁ M₁) :
+    orthogonalBilin (Dual.eval R₁ M₁') (S.map q) =
+      comap q.dualMap (orthogonalBilin (Dual.eval R₁ M₁) S) := by
+  ext x; simp
+
+theorem orthogonalBilin_id_map_dualMap (q : M₁ →ₗ[R₁] M₁') (S : Submodule R₁ (Dual R₁ M₁')) :
+    orthogonalBilin .id (S.map q.dualMap) = comap q (orthogonalBilin .id S) := by
+  ext x; simp
+
+end Map
 
 theorem le_orthogonalBilin_of_le_orthogonalBilin {T : Submodule R₂ M₂}
     (hST : T ≤ orthogonalBilin B S) : S ≤ orthogonalBilin B.flip T :=
@@ -299,7 +378,7 @@ end Orthogonal
 
 section CommRing
 
-variable [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup M₁] [Module R M₁] {I I' : R →+* R}
+variable [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup M₁] [Module R M₁]
 
 /-- The restriction of a reflexive bilinear map `B` onto a submodule `W` is
 nondegenerate if `W` has trivial intersection with its orthogonal complement,
