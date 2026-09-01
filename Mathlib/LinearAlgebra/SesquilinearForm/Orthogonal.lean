@@ -8,6 +8,7 @@ module
 public import Mathlib.LinearAlgebra.SesquilinearForm.Basic
 public import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 
+import Mathlib.Algebra.Module.Torsion.Field
 import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
@@ -27,8 +28,6 @@ open Module LinearMap
 variable {R R₁ R₂ M M₁ M₂ : Type*}
 
 namespace Submodule
-
-section CommSemiring
 
 /-! ### The orthogonal complement -/
 
@@ -207,94 +206,6 @@ theorem orthogonalBilin_id_map_dualMap (q : M₁ →ₗ[R₁] M₁') (S : Submod
 
 end Map
 
-theorem le_orthogonalBilin_of_le_orthogonalBilin {T : Submodule R₂ M₂}
-    (hST : T ≤ orthogonalBilin B S) : S ≤ orthogonalBilin B.flip T :=
-  le_trans le_orthogonalBilin_orthogonalBilin (orthogonalBilin_antitone hST)
-
-theorem le_orthogonalBilin_iff_le_orthogonalBilin {T : Submodule R₂ M₂} :
-    S ≤ orthogonalBilin B.flip T ↔ T ≤ orthogonalBilin B S :=
-  ⟨le_orthogonalBilin_of_le_orthogonalBilin, le_orthogonalBilin_of_le_orthogonalBilin⟩
-
-@[simp] theorem orthogonalBilin_orthogonalBilin_flip_orthogonalBilin (S) :
-    orthogonalBilin B (orthogonalBilin B.flip (orthogonalBilin B S)) = orthogonalBilin B S :=
-  le_antisymm (orthogonalBilin_le le_orthogonalBilin_orthogonalBilin)
-    le_orthogonalBilin_orthogonalBilin
-
-@[simp] theorem orthogonalBilin_flip_orthogonalBilin_orthogonalBilin_flip (S : Submodule R₂ M₂) :
-    orthogonalBilin B.flip (orthogonalBilin B (orthogonalBilin B.flip S)) =
-      orthogonalBilin B.flip S :=
-  orthogonalBilin_orthogonalBilin_flip_orthogonalBilin S
-
-theorem orthogonalBilin_sup_orthogonalBilin_le_orthogonalBilin_inf (S T) :
-    orthogonalBilin B S ⊔ orthogonalBilin B T ≤ orthogonalBilin B (S ⊓ T) :=
-  sup_le (orthogonalBilin_le inf_le_left) (orthogonalBilin_le inf_le_right)
-
-/-- The orthogonal submodule w.r.t. the standard bilinear pairing is the dual annihilator. -/
-@[simp] theorem orthogonalBilin_eval_eq_dualAnnihilator (S) :
-    orthogonalBilin (Dual.eval R₁ M₁) S = S.dualAnnihilator := by ext x; simp
-
-/-- The orthogonal submodule w.r.t. the identity pairing is the dual coannihilator. -/
-@[simp] theorem orthogonalBilin_id_eq_dualCoannihilator (S : Submodule R₁ (Dual R₁ M₁)) :
-    orthogonalBilin .id S = S.dualCoannihilator := by ext; simp
-
-variable {R₃ : Type*} [CommSemiring R₃]
-variable {M₃ : Type*} [AddCommMonoid M₃] [Module R₃ M₃]
-variable {J₃ : R₃ →+* R₁} {J : R₃ →+* R} [RingHomCompTriple J₃ I₁ J]
-
-variable [RingHomSurjective J₃] in
-@[simp] lemma orthogonalBilin_map (S : Submodule R₃ M₃) (q : M₃ →ₛₗ[J₃] M₁) :
-    orthogonalBilin B (S.map q) = orthogonalBilin (B.comp q) S := by ext; simp
-
-variable [RingHomSurjective I₁] in
-/-- Orthogonality w.r.t. a general bilinear map can be expressed as orthogonality w.r.t
-the identity pairing. -/
-lemma orthogonalBilin_id_map (S) :
-    orthogonalBilin .id (map B S) = orthogonalBilin B S := by simp
-
-section
-
-variable {I₂ : R₂ →+* R₁} {B : M₁ →ₗ[R₁] M₂ →ₛₗ[I₂] R₁}
-
-/-- Orthogonality w.r.t. a general bilinear map can be expressed as orthogonality w.r.t
-the evaluation pairing. -/
-lemma comap_orthogonalBilin_eval (S) :
-    comap B.flip (orthogonalBilin (Dual.eval R₁ M₁) S) = orthogonalBilin B S := by
-  ext; simp
-
-variable (B) in
-@[simp] theorem comap_dualAnnihilator_eq_orthogonalBilin (S) :
-    comap B.flip S.dualAnnihilator = orthogonalBilin B S := by
-  rw [← orthogonalBilin_eval_eq_dualAnnihilator, comap_orthogonalBilin_eval]
-
-end
-
-section
-
-variable {I₁ : R₁ →+* R₂} {B : M₁ →ₛₗ[I₁] M₂ →ₗ[R₂] R₂}
-
-variable (B) [RingHomSurjective I₁] in
-theorem dualCoannihilator_map_eq_orthogonalBilin (S) :
-    (map B S).dualCoannihilator = orthogonalBilin B S := by ext x; simp
-
-end
-
-section Map
-
-variable {M₁' : Type*} [AddCommMonoid M₁'] [Module R₁ M₁']
-
-theorem orthogonalBilin_eval_map (q : M₁ →ₗ[R₁] M₁') (S : Submodule R₁ M₁) :
-    orthogonalBilin (Dual.eval R₁ M₁') (S.map q) =
-      comap q.dualMap (orthogonalBilin (Dual.eval R₁ M₁) S) := by
-  ext x; simp
-
-theorem orthogonalBilin_id_map_dualMap (q : M₁ →ₗ[R₁] M₁') (S : Submodule R₁ (Dual R₁ M₁')) :
-    orthogonalBilin .id (S.map q.dualMap) = comap q (orthogonalBilin .id S) := by
-  ext x; simp
-
-end Map
-
-end CommSemiring
-
 section Field
 
 variable {K M M₁ M₂ : Type*}
@@ -309,7 +220,7 @@ theorem orthogonalBilin_flip_orthogonalBilin_of_inj
     (hB : Function.Injective B) (hS : S.FG) :
     orthogonalBilin B.flip (orthogonalBilin B S) = S := by
   have := Module.Finite.iff_fg.mpr hS
-  rw [← dualCoannihilator_map_eq_orthogonalBilin B S]
+  rw [← dualCoannihilator_map_eq_orthogonalBilin S]
   rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
   rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
   exact comap_map_eq_self <| (ker_eq_bot.mpr hB).le.trans bot_le
@@ -318,7 +229,7 @@ variable [Fact B.SeparatingLeft] in
 theorem orthogonalBilin_flip_orthogonalBilin (hS : S.FG) :
     orthogonalBilin B.flip (orthogonalBilin B S) = S := by
   have := Module.Finite.iff_fg.mpr hS
-  rw [← dualCoannihilator_map_eq_orthogonalBilin B S]
+  rw [← dualCoannihilator_map_eq_orthogonalBilin S]
   rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
   rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
   apply comap_map_eq_self
@@ -331,9 +242,11 @@ theorem orthogonalBilin_inf_eq_sup (hS : S.FG) (hT : T.FG) :
   rw [separatingLeft_iff_ker_eq_bot, ker_eq_bot] at fact
   have := Finite.iff_fg.mpr (hS.map B)
   have := Finite.iff_fg.mpr (hT.map B)
-  rw [← dualCoannihilator_map_eq_orthogonalBilin B]
-  rw [map_inf _ fact.out, Subspace.dualCoannihilator_inf_eq]
-  repeat rw [dualCoannihilator_map_eq_orthogonalBilin B]
+  rw [← dualCoannihilator_map_eq_orthogonalBilin (S ⊓ T)]
+  rw [map_inf _ fact.out, ← Subspace.dualAnnihilator_inj, dualAnnihilator_sup_eq]
+  rw [← dualCoannihilator_map_eq_orthogonalBilin S,
+    ← dualCoannihilator_map_eq_orthogonalBilin T]
+  repeat rw [Subspace.dualCoannihilator_dualAnnihilator_eq]
 
 end Field
 
