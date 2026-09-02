@@ -217,7 +217,7 @@ variable {B : M₁ →ₗ[K] M₂ →ₗ[K] K}
 variable {S T : Submodule K M₁}
 
 variable (B) [Fact B.SeparatingLeft] in
-@[simp] theorem FiniteDimensional.orthogonalBilin_flip_orthogonalBilin (S : Submodule K M₁)
+@[simp] theorem orthogonalBilin_flip_orthogonalBilin_of_finiteDimensional (S : Submodule K M₁)
     [FiniteDimensional K S] : orthogonalBilin B.flip (orthogonalBilin B S) = S := by
   rw [← dualCoannihilator_map_eq_orthogonalBilin S]
   rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
@@ -226,10 +226,23 @@ variable (B) [Fact B.SeparatingLeft] in
   rw [separatingLeft_iff_ker_eq_bot.mp Fact.out]
   exact bot_le
 
+variable (B) [Fact B.SeparatingLeft] in
+theorem FG.orthogonalBilin_flip_orthogonalBilin (hS : S.FG) :
+    orthogonalBilin B.flip (orthogonalBilin B S) = S :=
+  let := Module.Finite.of_fg hS
+  orthogonalBilin_flip_orthogonalBilin_of_finiteDimensional B S
+
 variable (B) [Fact B.SeparatingRight] in
-@[simp] theorem FiniteDimensional.orthogonalBilin_orthogonalBilin_flip (S : Submodule K M₂)
+@[simp] theorem orthogonalBilin_orthogonalBilin_flip_of_finiteDimensional (S : Submodule K M₂)
     [FiniteDimensional K S] : orthogonalBilin B (orthogonalBilin B.flip S) = S :=
   sorry -- orthogonalBilin_flip_orthogonalBilin B.flip S
+
+variable (B) [Fact B.SeparatingRight] in
+theorem FG.orthogonalBilin_orthogonalBilin_flip {S : Submodule K M₂} (hS : S.FG) :
+    orthogonalBilin B (orthogonalBilin B.flip S) = S :=
+  sorry -- FG.orthogonalBilin_flip_orthogonalBilin B.flip S
+
+/- NOTE: None of the below works if just one submodule is FG. -/
 
 variable [fact : Fact B.SeparatingLeft] in
 theorem FiniteDimensional.orthogonalBilin_inf_eq_sup
@@ -240,6 +253,13 @@ theorem FiniteDimensional.orthogonalBilin_inf_eq_sup
   rw [map_inf _ fact.out, ← Subspace.dualAnnihilator_inj, dualAnnihilator_sup_eq]
   rw [← dualCoannihilator_map_eq_orthogonalBilin S, ← dualCoannihilator_map_eq_orthogonalBilin T]
   repeat rw [Subspace.dualCoannihilator_dualAnnihilator_eq]
+
+variable [fact : Fact B.SeparatingLeft] in
+theorem FG.orthogonalBilin_inf_eq_sup (hS : S.FG) (hT : T.FG) :
+      orthogonalBilin B (S ⊓ T) = orthogonalBilin B S ⊔ orthogonalBilin B T :=
+  let := Module.Finite.of_fg hS
+  let := Module.Finite.of_fg hT
+  FiniteDimensional.orthogonalBilin_inf_eq_sup
 
 end Field
 
