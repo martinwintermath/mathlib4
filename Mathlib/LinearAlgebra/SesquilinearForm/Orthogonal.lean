@@ -216,19 +216,9 @@ variable [AddCommGroup M₂] [Module K M₂]
 variable {B : M₁ →ₗ[K] M₂ →ₗ[K] K}
 variable {S T : Submodule K M₁}
 
-theorem orthogonalBilin_flip_orthogonalBilin_of_inj
-    (hB : Function.Injective B) (hS : S.FG) :
-    orthogonalBilin B.flip (orthogonalBilin B S) = S := by
-  have := Module.Finite.iff_fg.mpr hS
-  rw [← dualCoannihilator_map_eq_orthogonalBilin S]
-  rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
-  rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
-  exact comap_map_eq_self <| (ker_eq_bot.mpr hB).le.trans bot_le
-
-variable [Fact B.SeparatingLeft] in
-theorem orthogonalBilin_flip_orthogonalBilin (hS : S.FG) :
-    orthogonalBilin B.flip (orthogonalBilin B S) = S := by
-  have := Module.Finite.iff_fg.mpr hS
+variable (B) [Fact B.SeparatingLeft] in
+@[simp] theorem FiniteDimensional.orthogonalBilin_flip_orthogonalBilin (S : Submodule K M₁)
+    [FiniteDimensional K S] : orthogonalBilin B.flip (orthogonalBilin B S) = S := by
   rw [← dualCoannihilator_map_eq_orthogonalBilin S]
   rw [← comap_dualAnnihilator_eq_orthogonalBilin B.flip]
   rw [Subspace.dualCoannihilator_dualAnnihilator_eq, LinearMap.flip_flip]
@@ -236,16 +226,19 @@ theorem orthogonalBilin_flip_orthogonalBilin (hS : S.FG) :
   rw [separatingLeft_iff_ker_eq_bot.mp Fact.out]
   exact bot_le
 
+variable (B) [Fact B.SeparatingRight] in
+@[simp] theorem FiniteDimensional.orthogonalBilin_orthogonalBilin_flip (S : Submodule K M₂)
+    [FiniteDimensional K S] : orthogonalBilin B (orthogonalBilin B.flip S) = S :=
+  sorry -- orthogonalBilin_flip_orthogonalBilin B.flip S
+
 variable [fact : Fact B.SeparatingLeft] in
-theorem orthogonalBilin_inf_eq_sup (hS : S.FG) (hT : T.FG) :
-    orthogonalBilin B (S ⊓ T) = orthogonalBilin B S ⊔ orthogonalBilin B T := by
+theorem FiniteDimensional.orthogonalBilin_inf_eq_sup
+    [FiniteDimensional K S] [FiniteDimensional K T] :
+      orthogonalBilin B (S ⊓ T) = orthogonalBilin B S ⊔ orthogonalBilin B T := by
   rw [separatingLeft_iff_ker_eq_bot, ker_eq_bot] at fact
-  have := Finite.iff_fg.mpr (hS.map B)
-  have := Finite.iff_fg.mpr (hT.map B)
   rw [← dualCoannihilator_map_eq_orthogonalBilin (S ⊓ T)]
   rw [map_inf _ fact.out, ← Subspace.dualAnnihilator_inj, dualAnnihilator_sup_eq]
-  rw [← dualCoannihilator_map_eq_orthogonalBilin S,
-    ← dualCoannihilator_map_eq_orthogonalBilin T]
+  rw [← dualCoannihilator_map_eq_orthogonalBilin S, ← dualCoannihilator_map_eq_orthogonalBilin T]
   repeat rw [Subspace.dualCoannihilator_dualAnnihilator_eq]
 
 end Field
